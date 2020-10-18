@@ -3,10 +3,11 @@
     <h2 class="title">TimeLine Note</h2>
     <hr class="line" />
     <div class="btn">
+      <el-button @click="show = !show "  type="info" icon="el-icon-view" size="small">显 示</el-button>
       <el-button
         icon="el-icon-edit"
         type="warning"
-        size="medium"
+        size="small"
         @click="dialogVisible = true"
         >新 增</el-button
       >
@@ -26,15 +27,19 @@
         <el-button type="warning" @click="addNote">确 定</el-button>
       </div>
     </el-dialog>
-    <div>
-      <timeline :noteList="noteList" @editItem="handleEdit"></timeline>
-    </div>
+    <transition name="el-zoom-in-top">
+      <timeline
+        v-show="show"
+        :noteList="noteList"
+        @editItem="handleEdit"
+      ></timeline>
+    </transition>
   </div>
 </template>
 
 <script>
 import Timeline from "./components/Timeline.vue";
-let aid = 1;
+
 export default {
   name: "app",
   components: {
@@ -42,44 +47,55 @@ export default {
   },
   data() {
     return {
+      show: true,
+      aId: -1,
       eId: -1,
       textarea: "",
-      noteList: [
-        {
-          id: "1",
-          time: "2001-01-01 01:00:00",
-          text: "第一步第一步第一步第一步第一步",
-          status: 0,
-        },
-      ],
+      noteList: [],
       dialogVisible: false,
     };
   },
+  mounted() {
+    this.getList();
+  },
   methods: {
+    getList() {
+      console.log("getList");
+      this.$axios.get("/notes").then((res) => {
+        this.noteList = res.data.reverse();
+        this.aId = this.noteList[0].id;
+      });
+    },
     addNote() {
       this.dialogVisible = false;
-      console.log("addnote");
-      let newtime = new Date().toISOString();
       if (this.textarea === "") return;
       if (this.eId !== -1) {
         console.log(this.eId);
         this.noteList.forEach((note) => {
           console.log(note);
           if (note.id === this.eId) {
-            console.log(note.id);
-            console.log(this.textarea);
             note.text = this.textarea;
           }
         });
         this.eId = -1;
       } else {
-        console.log("aid:" + aid);
-        this.noteList.unshift({
-          id: ++aid,
-          text: this.textarea,
-          status: 0,
-          time: newtime,
-        });
+        let newtime = new Date().toISOString();
+        this.$axios
+          .post("/notes", {
+            id: ++this.aId,
+            text: this.textarea,
+            status: 0,
+            time: newtime,
+          })
+          .then(() => {
+            this.getList();
+          });
+        // this.noteList.unshift({
+        //   id: ++aid,
+        //   text: this.textarea,
+        //   status: 0,
+        //   time: newtime,
+        // });
       }
       this.textarea = "";
     },
@@ -95,7 +111,6 @@ export default {
 
 <style lang="sass" scoped>
 #app
-  position: relative
   margin-top: 10px
   font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif
   .title
@@ -106,6 +121,6 @@ export default {
     color: #303133
   .btn
     position: absolute
-    margin-left: 20px
-    margin-top: 5px
+    left: 200px
+    top: 20px
 </style>
