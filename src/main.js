@@ -3,7 +3,7 @@ import App from './App.vue'
 import './plugins/element.js'
 import axios from 'axios'
 import 'element-ui/lib/theme-chalk/base.css';
-axios.defaults.baseURL = 'http://192.168.31.16:8818';
+axios.defaults.baseURL = 'http://localhost:3000';
 
 Vue.prototype.$axios = axios
 new Vue({
